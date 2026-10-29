@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgenticGuard Layer — Proposal Deck</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --ink: #0f172a;
+    --ink-2: #334155;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --brand: #4f46e5;
+    --brand-2: #0ea5e9;
+    --ok: #059669;
+    --warn: #d97706;
+    --bad: #dc2626;
+    --soft-brand: #eef2ff;
+    --soft-ok: #ecfdf5;
+    --soft-warn: #fffbeb;
+    --soft-bad: #fef2f2;
+    --soft-sky: #f0f9ff;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgb(15 23 42 / .04), 0 8px 24px rgb(15 23 42 / .06);
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px; border-bottom: 1px solid var(--line); background: var(--surface);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.01em; }
+  .logo {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    display: grid; place-items: center; color: #fff; font-size: 14px;
+  }
+  .section-tag { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .section-tag b { color: var(--brand); font-weight: 600; }
+
+  /* ---------- Stage ---------- */
+  .stage {
+    position: relative; overflow: auto; padding: 32px 28px;
+    view-transition-name: stage;
+  }
+  .slide {
+    max-width: 1180px; margin: 0 auto; min-height: 100%;
+    display: flex; flex-direction: column; gap: 22px;
+  }
+  .slide[hidden] { display: none; }
+
+  .kicker {
+    font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--brand);
+  }
+  h1, h2, h3 { margin: 0; letter-spacing: -.02em; }
+  h1 { font-size: clamp(34px, 4.6vw, 58px); line-height: 1.05; }
+  h2 { font-size: clamp(26px, 3vw, 38px); line-height: 1.12; }
+  h3 { font-size: 17px; line-height: 1.3; }
+  p { margin: 0; line-height: 1.55; color: var(--ink-2); }
+  .lead { font-size: clamp(16px, 1.5vw, 20px); color: var(--ink-2); max-width: 900px; }
+  .muted { color: var(--muted); }
+  code, .mono { font-family: var(--mono); font-size: .88em; }
+  code { background: #f1f5f9; padding: 1px 6px; border-radius: 6px; color: #1e293b; }
+
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 900px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px;
+  }
+  .card p { font-size: 14.5px; }
+  .card ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 14.5px; line-height: 1.55; }
+  .card li + li { margin-top: 4px; }
+  .num {
+    width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+    font-weight: 700; font-size: 14px; background: var(--soft-brand); color: var(--brand);
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; background: var(--soft-brand); color: var(--brand); width: fit-content;
+  }
+  .pill.ok { background: var(--soft-ok); color: var(--ok); }
+  .pill.warn { background: var(--soft-warn); color: var(--warn); }
+  .pill.bad { background: var(--soft-bad); color: var(--bad); }
+  .pill.sky { background: var(--soft-sky); color: #0369a1; }
+
+  .accent-ok { border-top: 4px solid var(--ok); }
+  .accent-bad { border-top: 4px solid var(--bad); }
+  .accent-brand { border-top: 4px solid var(--brand); }
+  .accent-warn { border-top: 4px solid var(--warn); }
+  .accent-sky { border-top: 4px solid var(--brand-2); }
+
+  .callout {
+    border-radius: var(--radius); padding: 18px 22px; background: var(--soft-brand);
+    border: 1px solid #c7d2fe; color: #312e81; font-size: 16px; line-height: 1.5;
+  }
+  .callout.ok { background: var(--soft-ok); border-color: #a7f3d0; color: #064e3b; }
+  .callout.warn { background: var(--soft-warn); border-color: #fde68a; color: #78350f; }
+
+  /* ---------- Title slide ---------- */
+  .hero {
+    background: radial-gradient(1200px 500px at 85% -10%, #e0e7ff 0%, transparent 60%),
+                radial-gradient(800px 400px at 0% 110%, #e0f2fe 0%, transparent 60%), var(--surface);
+    border: 1px solid var(--line); border-radius: 24px; padding: clamp(28px, 5vw, 64px);
+    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 22px; flex: 1; justify-content: center;
+  }
+  .hero .grad {
+    background: linear-gradient(90deg, var(--brand), var(--brand-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  /* ---------- Stack diagram ---------- */
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .layer {
+    border-radius: 14px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
+    gap: 16px; border: 1px solid var(--line); background: var(--surface);
+  }
+  .layer b { font-size: 15px; }
+  .layer span { font-size: 13.5px; color: var(--muted); }
+  .layer.buy { background: #f8fafc; }
+  .layer.build {
+    background: linear-gradient(90deg, var(--soft-brand), var(--soft-sky));
+    border: 2px solid var(--brand);
+  }
+
+  /* ---------- Flow ---------- */
+  .flow { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+  @media (max-width: 900px) { .flow { grid-template-columns: 1fr; } }
+  .step {
+    position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow);
+  }
+  .step .who { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .step.agent .who { color: var(--brand); }
+  .step.dev .who { color: #0369a1; }
+  .step.gate .who { color: var(--bad); }
+  .step h3 { font-size: 15px; }
+  .step p { font-size: 13px; }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; line-height: 1.5; }
+  th { background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  td b { color: var(--ink); }
+
+  .figure {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px;
+    box-shadow: var(--shadow);
+  }
+  .figure img { width: 100%; height: auto; display: block; border-radius: 10px; }
+
+  .quote {
+    font-size: clamp(20px, 2.4vw, 30px); line-height: 1.35; font-weight: 600; letter-spacing: -.01em;
+    border-left: 5px solid var(--brand); padding: 8px 0 8px 22px; color: var(--ink);
+  }
+
+  .terminal {
+    background: #0f172a; color: #e2e8f0; border-radius: 14px; padding: 16px 18px; font-family: var(--mono);
+    font-size: 13px; line-height: 1.6; overflow-x: auto;
+  }
+  .terminal .c { color: #94a3b8; }
+  .terminal .g { color: #34d399; }
+
+  /* ---------- Bottom nav ---------- */
+  .navbar {
+    display: flex; align-items: center; gap: 16px; padding: 12px 28px; border-top: 1px solid var(--line); background: var(--surface);
+  }
+  .navbar button {
+    font: inherit; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); border-radius: 10px; padding: 8px 14px; cursor: pointer;
+  }
+  .navbar button:hover { border-color: var(--brand); color: var(--brand); }
+  .navbar button:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 2px; }
+  .navbar button:disabled { opacity: .4; cursor: default; }
+  .progress { flex: 1; height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .progress > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .3s ease; }
+  .counter { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; }
+  .toc { font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; background: var(--surface); color: var(--ink); max-width: 280px; }
+  .hint { font-size: 12px; color: var(--muted); }
+  @media (max-width: 700px) { .hint { display: none; } }
+
+  /* ---------- Directional view transitions (progressive enhancement) ---------- */
+  @keyframes slide-to-left   { to   { transform: translateX(-6%); opacity: 0; } }
+  @keyframes slide-from-right{ from { transform: translateX(6%);  opacity: 0; } }
+  @keyframes slide-to-right  { to   { transform: translateX(6%);  opacity: 0; } }
+  @keyframes slide-from-left { from { transform: translateX(-6%); opacity: 0; } }
+  ::view-transition-group(stage) { animation-duration: .35s; animation-timing-function: ease-in-out; }
+  html:active-view-transition-type(forward)::view-transition-old(stage)  { animation: .35s ease-in-out both slide-to-left; }
+  html:active-view-transition-type(forward)::view-transition-new(stage)  { animation: .35s ease-in-out both slide-from-right; }
+  html:active-view-transition-type(backward)::view-transition-old(stage) { animation: .35s ease-in-out both slide-to-right; }
+  html:active-view-transition-type(backward)::view-transition-new(stage) { animation: .35s ease-in-out both slide-from-left; }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(stage), ::view-transition-old(stage), ::view-transition-new(stage) { animation: none !important; }
+  }
+
+  /* ---------- Print: one slide per page ---------- */
+  @media print {
+    body { display: block; overflow: visible; background: #fff; }
+    .topbar, .navbar { display: none; }
+    .stage { overflow: visible; padding: 0; }
+    .slide, .slide[hidden] { display: flex !important; break-after: page; padding: 24px; min-height: auto; }
+    .card, table, .figure { box-shadow: none; }
+    .interactive-diagram { display: none !important; }
+    .print-diagram { display: block !important; }
+  }
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><div class="logo" aria-hidden="true">◆</div> AgenticGuard Layer</div>
+  <div class="section-tag" id="sectionTag" aria-live="polite"></div>
+</header>
+
+<main class="stage" id="stage">
+
+  <!-- ================= 1. TITLE ================= -->
+  <section class="slide" data-section="Opening" aria-roledescription="slide">
+    <div class="hero">
+      <span class="kicker">Executive Proposal</span>
+      <h1>Don't build another coding assistant.<br><span class="grad">Govern and standardize the ones we already use.</span></h1>
+      <p class="lead">AgenticGuard Layer is a thin, containerized governance, observability and SDLC/STLC standardization layer that sits around Cursor, Claude Code, Codex or Copilot — it does not replace them.</p>
+      <div class="meta-row">
+        <span class="pill">Problem → Product → System → CFO</span>
+        <span class="pill sky">Synced with System Design &amp; Prototype</span>
+        <span class="pill ok">Runnable prototype included</span>
+      </div>
+      <p class="muted" style="font-size:14px">Navigate with ← → keys, the buttons below, or the slide menu.</p>
+    </div>
+  </section>
+
+  <!-- ================= 2. EXEC SUMMARY ================= -->
+  <section class="slide" data-section="Executive summary" aria-roledescription="slide">
+    <span class="kicker">Executive summary</span>
+    <h2>The answer in one slide</h2>
+    <div class="grid g3">
+      <div class="card accent-bad">
+        <span class="pill bad">Recommendation</span>
+        <h3>Do not build a coding assistant</h3>
+        <p>Editor UX and foundation models are where Microsoft, OpenAI, Anthropic and funded startups compete. We would be outspent on the part that is already good enough to buy.</p>
+      </div>
+      <div class="card accent-brand">
+        <span class="pill">Opportunity</span>
+        <h3>Own the layer vendors don't</h3>
+        <p>Assistants optimize one developer's session. Enterprises need cross-tool control: model routing, quotas, data-leak prevention, shared project context, standard SDLC/STLC outputs and evidence that work meets acceptance criteria.</p>
+      </div>
+      <div class="card accent-ok">
+        <span class="pill ok">Ask</span>
+        <h3>A small, stage-gated pilot</h3>
+        <p>2–4 engineers, one pilot team, explicit kill criteria. We compose open-source parts (Portkey, LangGraph, Langfuse, Loki/Grafana) and build only the thin differentiated piece.</p>
+      </div>
+    </div>
+    <div class="callout">We keep buying the assistants. We build the governance and standardization layer around them — and we stop if the pilot evidence doesn't justify it.</div>
+  </section>
+
+  <!-- ================= 3. CATEGORY TODAY ================= -->
+  <section class="slide" data-section="1 · Understand the problem" aria-roledescription="slide">
+    <span class="kicker">1 · Understand the problem</span>
+    <h2>The category today: assistants are strong for the individual</h2>
+    <p class="lead">Being fair to the incumbents matters — it shapes where an opportunity can and cannot exist.</p>
+    <div class="grid g2">
+      <div class="card accent-ok">
+        <span class="pill ok">What assistants already do well</span>
+        <ul>
+          <li>Code completion, chat, multi-file edits and agentic tasks inside the editor or terminal</li>
+          <li>Local repository understanding (indexing and reading the files the developer has open)</li>
+          <li>Rapid model upgrades funded by the vendors themselves</li>
+          <li>Extensibility hooks: custom base URLs, MCP tools and repo instruction files (e.g. <code>AGENTS.md</code>)</li>
+        </ul>
+      </div>
+      <div class="card accent-warn">
+        <span class="pill warn">Trade-offs they make by design</span>
+        <ul>
+          <li>Optimized for <b>one developer, one session</b> — not for a team or a portfolio of projects</li>
+          <li>Each tool has its own model catalog, admin console and telemetry</li>
+          <li>Output quality depends on the prompt, not on a shared, enforced process</li>
+          <li>No reason for a vendor to make it easy to compare or switch to a competitor</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted">Conclusion: competing on the assistant itself is the wrong fight. The gaps appear <b>between</b> tools, developers and SDLC stages.</p>
+  </section>
+
+  <!-- ================= 4. FIVE GAPS ================= -->
+  <section class="slide" data-section="1 · Understand the problem" aria-roledescription="slide">
+    <span class="kicker">1 · Understand the problem</span>
+    <h2>Five gaps that materially shape the opportunity</h2>
+    <div class="grid g3">
+      <div class="card"><div class="num">1</div><h3>No SDLC/STLC standardization</h3><p>Assistants turn prompts into code, but don't standardize backlog + acceptance criteria, QA test cases, project templates/specs, or a validation gate before merge.</p></div>
+      <div class="card"><div class="num">2</div><h3>Context drift, no traceability</h3><p>Each assistant is a local silo. Git tracks commits, not shared project context, who is allowed on a project, or which developer is on which story and stage.</p></div>
+      <div class="card"><div class="num">3</div><h3>Model lock-in &amp; fragmented catalogs</h3><p>Some tools are tied to one vendor's models, others expose a limited catalog. No single control point for the company's approved providers.</p></div>
+      <div class="card"><div class="num">4</div><h3>No unified quotas, RBAC or DLP</h3><p>No single interception point to decide which roles use expensive models, cap spend per developer, or block secrets and PII before they leave.</p></div>
+      <div class="card"><div class="num">5</div><h3>Blind on cost &amp; quality</h3><p>No unified view of LLM/agent traces, token cost and quality scores, nor of service health — so ROI and "which assistant is better for us" are opinions.</p></div>
+      <div class="card" style="background:var(--soft-brand);border-color:#c7d2fe"><h3>Common thread</h3><p>All five are <b>organizational</b> problems that sit across tools. No single assistant vendor is incentivized to solve them for its competitors.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= 5. POSITIONING ================= -->
+  <section class="slide" data-section="2 · Differentiated product" aria-roledescription="slide">
+    <span class="kicker">2 · Define the differentiated product</span>
+    <h2>Where we play: buy the commodity, build the thin layer</h2>
+    <div class="grid g2" style="align-items:center">
+      <div class="stack" aria-label="Positioning stack">
+        <div class="layer buy"><b>AI coding assistants</b><span>Cursor · Claude Code · Codex · Copilot — <i>buy</i></span></div>
+        <div class="layer build"><b>AgenticGuard Layer</b><span>governance · SDLC/STLC agents · project context · observability — <i>build (thin)</i></span></div>
+        <div class="layer buy"><b>Open-source building blocks</b><span>Portkey gateway · LangGraph · Langfuse · Fluentbit/Loki/Grafana — <i>compose</i></span></div>
+        <div class="layer buy"><b>Model providers</b><span>AWS Bedrock · Azure OpenAI · GCP Vertex AI — <i>buy</i></span></div>
+      </div>
+      <div class="card">
+        <span class="pill">Core value proposition</span>
+        <p style="font-size:17px;color:var(--ink)"><b>Let every developer keep their preferred assistant, while the organization gets one control point for models, spend and data, one shared source of project truth, and a standard, verifiable path from story to merge.</b></p>
+        <p class="muted">Narrow enough for 2–4 engineers to validate the central hypothesis with one pilot team.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 6. PRODUCT COMPONENTS ================= -->
+  <section class="slide" data-section="2 · Differentiated product" aria-roledescription="slide">
+    <span class="kicker">2 · Define the differentiated product</span>
+    <h2>The product: four elements</h2>
+    <div class="grid g2">
+      <div class="card accent-warn">
+        <span class="pill warn">AI Gateway</span>
+        <h3>Portkey AI Gateway (self-hosted, open source)</h3>
+        <p>All LLM calls from the assistant <b>and</b> from our 4 agents go through it: approved model catalog, role-based routing, Redis quotas, deterministic <code>before_request_hooks</code> that block secrets/PII, and provider fallback.</p>
+      </div>
+      <div class="card accent-bad">
+        <span class="pill bad">Deterministic MCP Server</span>
+        <h3>Access &amp; guardrail gate + 4 LangGraph agents</h3>
+        <p>The MCP server checks the developer is allowed on the <code>project_id</code> and enforces deterministic input/output rules before dispatching to <code>backlog_ac</code>, <code>qa_stlc</code>, <code>template_spec</code>, <code>validation_guard</code> — individually or in any order.</p>
+      </div>
+      <div class="card accent-brand">
+        <span class="pill">Central Project Context DB</span>
+        <h3>Shared truth keyed by <code>project_id</code></h3>
+        <p>Project context and standards, stage outcomes, allowed developers (<code>project_developers</code>) and who-works-on-what with branch and stage (<code>developer_work_state</code>) — a complement to Git, not a replacement.</p>
+      </div>
+      <div class="card accent-ok">
+        <span class="pill ok">Two-layer observability</span>
+        <h3>Langfuse + Fluentbit → Loki → Grafana</h3>
+        <p>Agents report AI traces, cost and rubric scores directly to Langfuse; the MCP server and all agents ship service logs through an embedded Fluentbit library to Loki, visualized in Grafana.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 7. STORY FLOW ================= -->
+  <section class="slide" data-section="2 · Differentiated product" aria-roledescription="slide">
+    <span class="kicker">2 · Define the differentiated product</span>
+    <h2>How one story flows — complement, not compete</h2>
+    <div class="flow">
+      <div class="step agent"><span class="who">Agent</span><h3>backlog_ac</h3><p>Docs/ALM → story + Gherkin acceptance criteria, synced to Jira/Linear/ADO.</p></div>
+      <div class="step agent"><span class="who">Agent</span><h3>qa_stlc</h3><p>Acceptance criteria → test matrix (happy, edge, security) + <code>pytest</code> stubs.</p></div>
+      <div class="step agent"><span class="who">Agent</span><h3>template_spec</h3><p>Only scaffolding, signatures, <code>SPEC.md</code>, <code>AGENTS.md</code>. No business logic.</p></div>
+      <div class="step dev"><span class="who">Developer + assistant</span><h3>Implements</h3><p>Their own Cursor / Claude Code writes the logic against the spec and tests.</p></div>
+      <div class="step gate"><span class="who">Gate</span><h3>validation_guard</h3><p>AST/SAST/type/test checks + LLM acceptance-criteria judge.</p></div>
+      <div class="step gate"><span class="who">Evidence</span><h3>Signed receipt</h3><p><code>X-AgenticGuard-Validation-Receipt</code> stored in the DB; ALM ticket updated.</p></div>
+    </div>
+    <div class="grid g2">
+      <div class="callout ok"><b>Modular by design:</b> each agent can be called alone (e.g. only <code>qa_stlc</code> on a hotfix) or in any custom order, depending on project maturity.</div>
+      <div class="callout"><b>Always in the background:</b> every LLM call goes through Portkey; every step writes state to the Central DB and emits Langfuse traces and Loki logs.</div>
+    </div>
+  </section>
+
+  <!-- ================= 8. DIFFERENT + LEFT OUT ================= -->
+  <section class="slide" data-section="2 · Differentiated product" aria-roledescription="slide">
+    <span class="kicker">2 · Define the differentiated product</span>
+    <h2>What we do differently — and what we deliberately leave out</h2>
+    <div class="grid g2">
+      <div class="card accent-brand">
+        <span class="pill">Deliberately different</span>
+        <ul>
+          <li><b>Harness-agnostic:</b> integrates through base-URL override, MCP and <code>AGENTS.md</code> — works with whichever assistant a team prefers.</li>
+          <li><b>Complements code generation:</b> our agents produce contracts (criteria, tests, specs); the assistant writes the code.</li>
+          <li><b>Process over prompt:</b> a standard, enforceable path from story to merge, with a verifiable receipt.</li>
+          <li><b>Team &amp; portfolio scope:</b> shared state by <code>project_id</code> instead of per-session memory.</li>
+          <li><b>Compose, don't reinvent:</b> gateway, orchestration and observability are open-source components.</li>
+        </ul>
+      </div>
+      <div class="card accent-bad">
+        <span class="pill bad">Explicitly left out</span>
+        <ul>
+          <li><b>No IDE, editor fork or chat UI</b> — the assistants already do this well.</li>
+          <li><b>No model training or fine-tuning</b> — we route to providers we already contract.</li>
+          <li><b>No full-codebase vector indexing</b> — assistants index local code; we store structured project context.</li>
+          <li><b>No custom proxy or tracing UI from scratch</b> — Portkey, Langfuse and Grafana cover it.</li>
+          <li><b>No autonomous "write the whole feature" agent</b> — keeps scope small and humans in control.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 9. WHY ADOPT ================= -->
+  <section class="slide" data-section="2 · Differentiated product" aria-roledescription="slide">
+    <span class="kicker">2 · Define the differentiated product</span>
+    <h2>Why someone would supplement their assistant with this</h2>
+    <div class="grid g4">
+      <div class="card accent-sky"><span class="pill sky">Developer</span><h3>Keeps their tool</h3><p>No forced switch. Gets ready-made criteria, tests and specs, plus early feedback from the validation gate before review.</p></div>
+      <div class="card accent-brand"><span class="pill">Engineering lead</span><h3>Aligned team</h3><p>One source of project truth, standard outputs per stage, and visibility of who is on which story — across tools.</p></div>
+      <div class="card accent-bad"><span class="pill bad">Security</span><h3>One control point</h3><p>Deterministic secret/PII blocking, role-based model access and audit logs — independent of which assistant is used.</p></div>
+      <div class="card accent-ok"><span class="pill ok">CFO / CTO</span><h3>Evidence, not opinion</h3><p>Spend and validation results per assistant, so renewals and switches are decided on our own data.</p></div>
+    </div>
+    <div class="callout">Positioning: a <b>supplement</b> to established assistants, never a replacement. That is what lowers adoption friction.</div>
+  </section>
+
+  <!-- ================= 10. ARCHITECTURE ================= -->
+  <section class="slide" data-section="3 · Design the system" aria-roledescription="slide">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <span class="kicker">3 · Design the system</span>
+        <h2>Architecture of the first credible version</h2>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span class="pill sky" style="font-size: 12px;">Interactive Diagram (Pan, Zoom &amp; Inspect)</span>
+        <a href="./assets/agenticguard-layer.html?theme=light" target="_blank" rel="noopener noreferrer" class="pill" style="font-size: 12px; text-decoration: none;">Open Fullscreen ↗</a>
+      </div>
+    </div>
+    <div class="figure" style="padding: 0; overflow: hidden; background: #ffffff;">
+      <iframe class="interactive-diagram" src="./assets/agenticguard-layer.html?theme=light" title="AgenticGuard Interactive Architecture Canvas" loading="lazy" style="width: 100%; height: 560px; border: none; border-radius: 12px; display: block;"></iframe>
+      <img class="print-diagram" src="./assets/agenticguard-architecture-light.png" alt="AgenticGuard Architecture Diagram" style="display: none; width: 100%; height: auto; border-radius: 10px;">
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 4px;">
+      <span>💡 <i>Tip: Click any component in the live canvas above to inspect inputs, outputs, and sub-second latency budgets.</i></span>
+      <span>Full System Design Spec: <a href="../Technical%20Architecture%20-%20System%20Design/01_System_Design_AgenticGuard.md" target="_blank" style="color: var(--brand);">01_System_Design_AgenticGuard.md</a></span>
+    </div>
+  </section>
+
+  <!-- ================= 11. KEY DECISIONS ================= -->
+  <section class="slide" data-section="3 · Design the system" aria-roledescription="slide">
+    <span class="kicker">3 · Design the system</span>
+    <h2>The decisions that matter most</h2>
+    <div class="grid g4">
+      <div class="card"><span class="pill">Model strategy &amp; context</span><p>All LLM traffic via Portkey with group-scoped configs and fallback across providers. Context fetched by <code>project_id</code> from the Central DB in a stable order to help prompt caching.</p></div>
+      <div class="card"><span class="pill">Repository understanding</span><p>Left to the assistant locally. We condition it with <code>AGENTS.md</code> + <code>SPEC.md</code> and keep cross-developer state in the DB.</p></div>
+      <div class="card"><span class="pill">Tools &amp; permissions</span><p>Two tiers: project-level authorization at the MCP server; model RBAC and quotas at the gateway via <code>x-portkey-metadata</code>.</p></div>
+      <div class="card"><span class="pill">Orchestration</span><p>LangGraph <code>StateGraph</code> with conditional edges: single agent or any custom sequence, state persisted per step.</p></div>
+      <div class="card"><span class="pill bad">Evaluation, security, privacy</span><p>Deterministic pre-flight DLP at the gateway; deterministic AST/SAST/tests first, LLM judge second, in <code>validation_guard</code>.</p></div>
+      <div class="card"><span class="pill ok">Observability &amp; human control</span><p>Langfuse for AI traces/cost/scores; Loki + Grafana for service logs. Stage outcomes in the DB enable human sign-off before lock-in.</p></div>
+      <div class="card"><span class="pill warn">Latency, cost, failure</span><p>Deterministic checks stay on the hot path; telemetry is async and fail-open. Portkey retry/fallback on 429/5xx. Latency budget to be measured in the pilot.</p></div>
+      <div class="card"><span class="pill sky">Enterprise integration</span><p>Bi-directional ALM sync (Jira/Linear/ADO), receipt checks in CI, containerized deployment (Docker Compose / Kubernetes).</p></div>
+    </div>
+  </section>
+
+  <!-- ================= 12. RISKS ================= -->
+  <section class="slide" data-section="3 · Design the system" aria-roledescription="slide">
+    <span class="kicker">3 · Design the system</span>
+    <h2>Largest risks and the assumptions we are making</h2>
+    <table>
+      <thead><tr><th style="width:32%">Risk / assumption</th><th style="width:14%">Severity</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><b>Assistants ignore <code>AGENTS.md</code> or bypass the gateway base URL</b></td><td><span class="pill bad">High</span></td><td>Don't rely on instructions alone: a Git pre-commit hook and CI gate block merges without a valid validation receipt for that <code>project_id</code>/<code>story_id</code>; network egress restricted to the gateway.</td></tr>
+        <tr><td><b>Generated tests don't match what the assistant implements</b></td><td><span class="pill bad">High</span></td><td>Contract-first scaffolding: <code>template_spec</code> emits the exact function signatures together with the <code>pytest</code> contract.</td></tr>
+        <tr><td><b>Upstream agents add friction developers won't accept</b></td><td><span class="pill warn">Medium</span></td><td>Agents are optional and modular; measure cycle-time impact in the pilot and automate via ALM webhook if manual use is too slow.</td></tr>
+        <tr><td><b>LLM judge is noisy or inconsistent</b></td><td><span class="pill warn">Medium</span></td><td>Deterministic checks decide pass/fail first; judge scores are logged to Langfuse and reviewed by humans before they gate anything.</td></tr>
+        <tr><td><b>Observability adds latency</b></td><td><span class="pill ok">Low–Med</span></td><td>Langfuse and Fluentbit shipping are asynchronous and fail-open.</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">Key assumption: assistants keep supporting custom base URLs and MCP tools — today they do; it's the foundation of harness-agnostic integration.</p>
+  </section>
+
+  <!-- ================= 13. PROTOTYPE ================= -->
+  <section class="slide" data-section="3 · Design the system" aria-roledescription="slide">
+    <span class="kicker">3 · Design the system · What we prototyped first</span>
+    <h2>A deliberately small prototype that tests the riskiest assumptions</h2>
+    <div class="grid g2">
+      <div class="card">
+        <span class="pill ok">What it demonstrates (5 scenarios)</span>
+        <ul>
+          <li>LangGraph agents run in a custom sequence and standalone, persisting outcomes and developer work state by <code>project_id</code></li>
+          <li>Gateway logic: RBAC model downgrade, secret blocking (HTTP 446), quota block (HTTP 429), provider fallback</li>
+          <li><code>validation_guard</code> rejects unsafe code (<code>eval</code>, missing types/docstrings) and issues a receipt for compliant code</li>
+          <li>Unauthorized developer blocked from a project; Langfuse spans/scores and Fluentbit→Loki log records produced</li>
+        </ul>
+        <p class="muted" style="font-size:13px"><b>Honest scope:</b> LLM providers and Langfuse/Loki exports are simulated in-process so it runs with zero dependencies. It validates control flow and contracts — not model quality or production latency.</p>
+      </div>
+      <div class="card">
+        <span class="pill">Run it in under a minute</span>
+        <div class="terminal">
+<span class="c"># deliverables/Functional Prototype</span>
+python3 demo_walkthrough.py
+python3 -m unittest discover -s tests -v
+<span class="g">Ran 6 tests ... OK</span>
+<span class="c"># optional: containerized stack</span>
+docker-compose up --build
+        </div>
+        <p class="muted" style="font-size:13px">Code: <code>db.py</code> · <code>gateway.py</code> · <code>agents_mcp.py</code> · <code>observability.py</code> · <code>AGENTS.md</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 14. MEASURE + KILL ================= -->
+  <section class="slide" data-section="3 · Design the system" aria-roledescription="slide">
+    <span class="kicker">3 · Design the system</span>
+    <h2>What we measure — and what would make us change course</h2>
+    <div class="grid g2">
+      <div class="card accent-brand">
+        <span class="pill">Pilot metrics (baseline first, then compare)</span>
+        <ul>
+          <li><b>First-pass validation rate</b> — share of PRs passing tests, SAST and acceptance criteria on the first attempt</li>
+          <li><b>Rework / review cycles per story</b> and story cycle time</li>
+          <li><b>Cost per validated story</b>, per assistant (Langfuse)</li>
+          <li><b>DLP interceptions</b> on seeded secrets and gateway latency overhead (Grafana/Loki)</li>
+          <li><b>Adoption:</b> share of sessions that actually call the MCP tools</li>
+        </ul>
+        <p class="muted" style="font-size:13px">We have no baseline data yet — the first two pilot weeks measure the team <i>without</i> the layer. Targets are set from that baseline, not assumed.</p>
+      </div>
+      <div class="card accent-warn">
+        <span class="pill warn">Change or abandon if…</span>
+        <ul>
+          <li><b>Upstream agents slow stories down</b> without a clear lift in first-pass quality → move them to an automatic ALM webhook, or drop them</li>
+          <li><b>Assistants routinely skip MCP calls</b> → replace passive <code>AGENTS.md</code> conditioning with a CLI / pre-commit wrapper</li>
+          <li><b>Vendors ship cross-tool governance at parity</b> → retire the gateway layer and keep only project context + SDLC agents</li>
+          <li><b>No measurable quality or cost difference</b> after the pilot → stop; keep buying assistants as-is</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 15. CFO QUESTION ================= -->
+  <section class="slide" data-section="4 · Convince the skeptical CFO" aria-roledescription="slide">
+    <span class="kicker">4 · Convince the skeptical CFO</span>
+    <div class="quote">"Microsoft, OpenAI, Anthropic and well-funded startups are already spending enormous amounts on this. Why should we believe we can compete — and why shouldn't we simply buy their products?"</div>
+    <div class="callout ok" style="font-size:18px"><b>Short answer:</b> you're right — we shouldn't compete with them, and we should keep buying their products. What I'm proposing is not a competitor. It's the thin layer that lets us use <i>their</i> products safely, consistently and measurably — something none of them is incentivized to build across their rivals' tools.</div>
+  </section>
+
+  <!-- ================= 16. BUY VS BUILD ================= -->
+  <section class="slide" data-section="4 · Convince the skeptical CFO" aria-roledescription="slide">
+    <span class="kicker">4 · Convince the skeptical CFO</span>
+    <h2>We buy almost everything. We build one thin piece.</h2>
+    <table>
+      <thead><tr><th>Capability</th><th>Decision</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><b>Coding assistants</b></td><td><span class="pill ok">Buy</span></td><td>Vendors invest far more than we could; developers choose the tool.</td></tr>
+        <tr><td><b>Foundation models</b></td><td><span class="pill ok">Buy</span></td><td>Consumed through the cloud providers we already contract.</td></tr>
+        <tr><td><b>Gateway, orchestration, observability</b></td><td><span class="pill sky">Compose (open source)</span></td><td>Portkey, LangGraph, Langfuse, Fluentbit/Loki/Grafana — no licence spend to start, replaceable.</td></tr>
+        <tr><td><b>Project context, SDLC/STLC agents, validation receipts, policies</b></td><td><span class="pill">Build (thin)</span></td><td>Specific to how <i>we</i> deliver software. No vendor sells our acceptance criteria, our standards or cross-tool evidence.</td></tr>
+      </tbody>
+    </table>
+    <div class="grid g3">
+      <div class="card"><h3>Reduces vendor risk</h3><p>One gateway and one context store mean switching assistants or models is a configuration change, not a migration.</p></div>
+      <div class="card"><h3>Protects the downside</h3><p>Data-leak prevention and spend caps apply to every tool, including the ones we buy next year.</p></div>
+      <div class="card"><h3>Makes spend accountable</h3><p>Cost and validation results per assistant turn renewals into data-driven decisions.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= 17. INVESTMENT SHAPE ================= -->
+  <section class="slide" data-section="4 · Convince the skeptical CFO" aria-roledescription="slide">
+    <span class="kicker">4 · Convince the skeptical CFO</span>
+    <h2>A stage-gated bet with a small, capped downside</h2>
+    <div class="grid g3">
+      <div class="card accent-ok"><span class="pill ok">Phase 0 · Done</span><h3>Prototype</h3><p>Control flow, gateway policies, agent orchestration, project state and validation gate proven end-to-end in a runnable prototype.</p></div>
+      <div class="card accent-brand"><span class="pill">Phase 1 · Pilot</span><h3>One team, 2–4 engineers</h3><p>Deploy the containers, connect real providers and one ALM. Measure a baseline first, then the same team with the layer.</p></div>
+      <div class="card accent-warn"><span class="pill warn">Decision gate</span><h3>Scale, narrow or stop</h3><p>Scale only if quality, cost and adoption metrics move against baseline. Otherwise narrow to the parts that worked — or stop.</p></div>
+    </div>
+    <div class="callout warn"><b>What I'm not claiming:</b> I don't have ROI numbers yet, and I won't invent them. The pilot exists to produce them on our own work. The investment is capped by team size and time-box, and every phase has an explicit exit.</div>
+  </section>
+
+  <!-- ================= 18. OBJECTIONS ================= -->
+  <section class="slide" data-section="4 · Convince the skeptical CFO" aria-roledescription="slide">
+    <span class="kicker">4 · Convince the skeptical CFO · Pushback I expect</span>
+    <h2>Defending the recommendation</h2>
+    <div class="grid g2">
+      <div class="card"><h3>"Vendors will add governance features anyway."</h3><p>Likely — inside their own tool. Cross-tool control is against their incentives. If they reach parity, that's a written kill criterion: we retire our gateway layer and keep the parts that remain unique.</p></div>
+      <div class="card"><h3>"Isn't this just Portkey with extra steps?"</h3><p>Portkey is the gateway component. The value we build is project context by <code>project_id</code>, standard SDLC/STLC outputs and validation receipts tied to our acceptance criteria.</p></div>
+      <div class="card"><h3>"Developers will bypass it."</h3><p>Some will try. Enforcement doesn't depend on goodwill: network egress to the gateway, plus CI gates that require a receipt before merge.</p></div>
+      <div class="card"><h3>"Why not buy an enterprise AI-governance platform?"</h3><p>Worth evaluating in the pilot. Those cover the gateway/policy layer; the SDLC/STLC standardization and project state are still ours. Open-source first keeps that option open without lock-in.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= 19. CLOSE ================= -->
+  <section class="slide" data-section="Close" aria-roledescription="slide">
+    <div class="hero">
+      <span class="kicker">Recommendation</span>
+      <h2 style="font-size:clamp(28px,3.6vw,46px)">Keep buying the best assistants.<br><span class="grad">Build the thin layer that makes them safe, consistent and measurable.</span></h2>
+      <div class="grid g3">
+        <div class="card"><span class="pill">Decision requested</span><p>Approve a time-boxed pilot with one team and 2–4 engineers.</p></div>
+        <div class="card"><span class="pill ok">What you get</span><p>Baseline vs. with-layer evidence on quality, cost per validated story, DLP and adoption.</p></div>
+        <div class="card"><span class="pill warn">Exit built in</span><p>Explicit criteria to scale, narrow or stop at the decision gate.</p></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="navbar" aria-label="Slide navigation">
+  <button id="prev" type="button" aria-label="Previous slide">← Prev</button>
+  <button id="next" type="button" aria-label="Next slide">Next →</button>
+  <label class="hint" for="toc">Jump to</label>
+  <select id="toc" class="toc"></select>
+  <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+  <span class="counter" id="counter" aria-live="polite"></span>
+</nav>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const bar = document.getElementById('bar');
+  const counter = document.getElementById('counter');
+  const toc = document.getElementById('toc');
+  const tag = document.getElementById('sectionTag');
+  const stage = document.getElementById('stage');
+  let current = 0;
+
+  slides.forEach((s, i) => {
+    const heading = s.querySelector('h1, h2, .quote')?.cloneNode(true);
+    heading?.querySelectorAll('br').forEach((br) => br.replaceWith(' '));
+    const title = (heading?.textContent || '').trim().replace(/\s+/g, ' ');
+    s.setAttribute('aria-label', `${i + 1} of ${slides.length}`);
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = `${i + 1}. ${title.length > 52 ? title.slice(0, 50) + '…' : title}`;
+    toc.append(opt);
+  });
+
+  function render(i) {
+    slides.forEach((s, idx) => { s.hidden = idx !== i; });
+    current = i;
+    bar.style.width = `${((i + 1) / slides.length) * 100}%`;
+    counter.textContent = `${i + 1} / ${slides.length}`;
+    toc.value = String(i);
+    prev.disabled = i === 0;
+    next.disabled = i === slides.length - 1;
+    const section = slides[i].dataset.section || '';
+    tag.innerHTML = section ? `<b>${section}</b>` : '';
+    stage.scrollTop = 0;
+    history.replaceState(null, '', `#${i + 1}`);
+  }
+
+  function go(i) {
+    if (i < 0 || i >= slides.length || i === current) return;
+    const direction = i > current ? 'forward' : 'backward';
+    if (!document.startViewTransition) { render(i); return; }
+    try {
+      document.startViewTransition({ update: () => render(i), types: [direction] });
+    } catch {
+      document.startViewTransition(() => render(i));
+    }
+  }
+
+  prev.addEventListener('click', () => go(current - 1));
+  next.addEventListener('click', () => go(current + 1));
+  toc.addEventListener('change', () => go(Number(toc.value)));
+  document.addEventListener('keydown', (e) => {
+    if (e.target === toc) return;
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(current + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(current - 1); }
+    if (e.key === 'Home') { e.preventDefault(); go(0); }
+    if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+
+  const fromHash = parseInt(location.hash.slice(1), 10);
+  render(Number.isFinite(fromHash) && fromHash >= 1 && fromHash <= slides.length ? fromHash - 1 : 0);
+})();
+
+
+</script>
+</body>
+</html>
+

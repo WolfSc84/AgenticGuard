@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  # 1. North-South AI Gateway (portkey-ai/gateway)
+  portkey-gateway:
+    image: portkeyai/gateway:latest
+    container_name: portkey-ai-gateway
+    ports:
+      - "8787:8787"
+    restart: unless-stopped
+
+  # 2. East-West Containerized LangGraph SDLC/STLC Agent & MCP Service
+  agenticguard-mcp-langgraph:
+    build: .
+    container_name: agenticguard-mcp-langgraph
+    ports:
+      - "8000:8000"
+    environment:
+      - PORTKEY_GATEWAY_URL=http://portkey-gateway:8787/v1
+      - LANGFUSE_HOST=http://langfuse:3000
+      - LOKI_URL=http://loki:3100
+      - AGENTICGUARD_DB_PATH=/app/data/agentic_guard.db
+    depends_on:
+      - portkey-gateway
+      - langfuse
+      - loki
+    volumes:
+      - agenticguard_data:/app/data
+    restart: unless-stopped
+
+  # 3. AI & Agent Observability Plane (Langfuse connected to Portkey & LangGraph)
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: agenticguard-langfuse
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=agenticguard-dev-secret
+      - SALT=agenticguard-dev-salt
+    restart: unless-stopped
+
+  # 4. Container & Service Log Aggregation (Fluent Bit -> Loki -> Grafana)
+  fluent-bit:
+    image: fluent/fluent-bit:latest
+    container_name: agenticguard-fluent-bit
+    volumes:
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: agenticguard-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: agenticguard-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+volumes:
+  agenticguard_data:

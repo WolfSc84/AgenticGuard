@@ -1,0 +1,449 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AgenticGuard Layer: Enterprise AI Governance, SDLC/STLC Standardization & Observability",
+    "locale": "en",
+    "output": "deliverables/Technical Architecture - System Design/agenticguard-layer.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "ide_to_mcp",
+        "label": "1. IDE & MCP Gate",
+        "focus": [
+          "repo_agents_md",
+          "coding_assistant",
+          "mcp_router",
+          "central_db",
+          "alm_system"
+        ],
+        "note": "Repo AGENTS.md conditions the IDE assistant to call MCP Server (:8000), which checks permissions and syncs Central DB state."
+      },
+      {
+        "id": "sdlc_agents",
+        "label": "2. Modular SDLC/STLC Agents",
+        "focus": [
+          "mcp_router",
+          "backlog_agent",
+          "qa_agent",
+          "spec_agent",
+          "validation_agent"
+        ],
+        "note": "MCP Server dispatches any single LangGraph agent or custom sequence (Backlog/AC, QA Test Matrix, Spec, or Validation Guard)."
+      },
+      {
+        "id": "llm_gateway",
+        "label": "3. Portkey AI Gateway (:8787)",
+        "focus": [
+          "coding_assistant",
+          "backlog_agent",
+          "qa_agent",
+          "spec_agent",
+          "validation_agent",
+          "portkey_gateway",
+          "portkey_hooks",
+          "redis_quota",
+          "llm_providers"
+        ],
+        "note": "100% of LLM calls from the Coding Assistant and all 4 Agents route through Portkey for DLP hooks, RBAC, quotas, and failover."
+      },
+      {
+        "id": "observability",
+        "label": "4. Dual Observability",
+        "focus": [
+          "mcp_router",
+          "backlog_agent",
+          "qa_agent",
+          "spec_agent",
+          "validation_agent",
+          "loki_grafana",
+          "langfuse"
+        ],
+        "note": "Loki + Grafana captures Fluentbit service logs from MCP + 4 agents; Langfuse captures AI traces, costs, and rubric scores."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "alm_system",
+      "type": "external",
+      "label": "Enterprise ALM & Docs",
+      "sublabel": "Jira / Linear / PRDs",
+      "tag": "External Input",
+      "pos": [345, 35],
+      "size": [245, 68]
+    },
+    {
+      "id": "repo_agents_md",
+      "type": "frontend",
+      "label": "Repo AGENTS.md",
+      "sublabel": "Project & Org Context Rules",
+      "tag": "Step 1: Conditions IDE",
+      "pos": [40, 175],
+      "size": [180, 68]
+    },
+    {
+      "id": "coding_assistant",
+      "type": "frontend",
+      "label": "AI Coding Assistant",
+      "sublabel": "Cursor / Claude Code / Codex",
+      "tag": "Developer IDE",
+      "pos": [40, 325],
+      "size": [180, 68]
+    },
+    {
+      "id": "central_db",
+      "type": "database",
+      "label": "Central Project Context DB",
+      "sublabel": "Project ID State, Devs & Trace",
+      "tag": "Step 3: Git Complement",
+      "pos": [345, 175],
+      "size": [245, 68]
+    },
+    {
+      "id": "mcp_router",
+      "type": "security",
+      "label": "AgenticGuard MCP Server",
+      "sublabel": "Deterministic Access & Guard :8000",
+      "tag": "Step 2: Access Gate",
+      "pos": [345, 325],
+      "size": [245, 68]
+    },
+    {
+      "id": "loki_grafana",
+      "type": "backend",
+      "label": "Loki + Grafana (:3100/:3001)",
+      "sublabel": "Fluentbit Logs: MCP + 4 Agents",
+      "tag": "Service Observability",
+      "pos": [720, 325],
+      "size": [250, 68]
+    },
+    {
+      "id": "backlog_agent",
+      "type": "backend",
+      "label": "Backlog & AC Agent",
+      "sublabel": "LangGraph: Stories & Gherkin AC",
+      "tag": "Stage 1 (Optional)",
+      "pos": [345, 515],
+      "size": [182, 68]
+    },
+    {
+      "id": "qa_agent",
+      "type": "backend",
+      "label": "QA & STLC Agent",
+      "sublabel": "LangGraph: Test Matrix & Pytest",
+      "tag": "Stage 2 (Optional)",
+      "pos": [558, 515],
+      "size": [182, 68]
+    },
+    {
+      "id": "spec_agent",
+      "type": "backend",
+      "label": "Template & Spec Agent",
+      "sublabel": "LangGraph: Scaffolding & SPEC.md",
+      "tag": "Stage 3 (Optional)",
+      "pos": [771, 515],
+      "size": [182, 68]
+    },
+    {
+      "id": "validation_agent",
+      "type": "security",
+      "label": "Validation Guard Agent",
+      "sublabel": "LangGraph: SAST, Pytest & Judge",
+      "tag": "Stage 4: Merge Gate",
+      "pos": [984, 515],
+      "size": [182, 68]
+    },
+    {
+      "id": "portkey_gateway",
+      "type": "cloud",
+      "label": "Portkey AI Gateway (:8787)",
+      "sublabel": "Routes All 4 Agents & Coding Assistant",
+      "tag": "Step 5: 100% LLM Traffic",
+      "pos": [345, 700],
+      "size": [440, 68]
+    },
+    {
+      "id": "langfuse",
+      "type": "backend",
+      "label": "Langfuse Observability (:3000)",
+      "sublabel": "AI Traces, Costs & Rubric Scores",
+      "tag": "AI Observability",
+      "pos": [825, 700],
+      "size": [341, 68]
+    },
+    {
+      "id": "portkey_hooks",
+      "type": "security",
+      "label": "Portkey Config & Hooks",
+      "sublabel": "before_request_hooks & RBAC",
+      "tag": "Step 6: DLP & RBAC",
+      "pos": [595, 835],
+      "size": [215, 68]
+    },
+    {
+      "id": "redis_quota",
+      "type": "database",
+      "label": "Redis Quota Store",
+      "sublabel": "Developer Budgets & Rate Limits",
+      "tag": "Step 7: Token Quotas",
+      "pos": [950, 835],
+      "size": [216, 68]
+    },
+    {
+      "id": "llm_providers",
+      "type": "external",
+      "label": "Multi-Cloud LLM Catalog",
+      "sublabel": "AWS Bedrock / Azure OpenAI / Vertex AI",
+      "tag": "Step 8: Cloud LLMs",
+      "pos": [345, 965],
+      "size": [240, 68]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Containerized AgenticGuard Layer (Docker / Kubernetes VPC)",
+      "wraps": [
+        "central_db",
+        "mcp_router",
+        "loki_grafana",
+        "backlog_agent",
+        "qa_agent",
+        "spec_agent",
+        "validation_agent",
+        "portkey_gateway",
+        "portkey_hooks",
+        "langfuse",
+        "redis_quota"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Modular LangGraph SDLC & STLC Agent Services (Invocable Individually or in Custom Order)",
+      "wraps": [
+        "backlog_agent",
+        "qa_agent",
+        "spec_agent",
+        "validation_agent"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "agents-md-conditions-ide",
+      "from": "repo_agents_md",
+      "to": "coding_assistant",
+      "label": "1. conditions IDE",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "ide-to-mcp",
+      "from": "coding_assistant",
+      "to": "mcp_router",
+      "label": "2. MCP calls (:8000)",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "mcp-to-db",
+      "from": "mcp_router",
+      "to": "central_db",
+      "label": "3. auth & state",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "alm-to-db",
+      "from": "alm_system",
+      "to": "central_db",
+      "label": "ALM ticket sync",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "mcp-to-loki",
+      "from": "mcp_router",
+      "to": "loki_grafana",
+      "label": "Fluentbit logs",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "mcp-to-backlog",
+      "from": "mcp_router",
+      "to": "backlog_agent",
+      "label": "4. dispatches",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "mcp-to-validation",
+      "from": "mcp_router",
+      "to": "validation_agent",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "mcp-to-spec",
+      "from": "mcp_router",
+      "to": "spec_agent",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "mcp-to-qa",
+      "from": "mcp_router",
+      "to": "qa_agent",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "backlog-to-loki",
+      "from": "backlog_agent",
+      "to": "loki_grafana",
+      "variant": "dashed",
+      "fromSide": "top"
+    },
+    {
+      "id": "qa-to-loki",
+      "from": "qa_agent",
+      "to": "loki_grafana",
+      "variant": "dashed",
+      "fromSide": "top"
+    },
+    {
+      "id": "spec-to-loki",
+      "from": "spec_agent",
+      "to": "loki_grafana",
+      "variant": "dashed",
+      "fromSide": "top"
+    },
+    {
+      "id": "validation-to-loki",
+      "from": "validation_agent",
+      "to": "loki_grafana",
+      "variant": "dashed",
+      "fromSide": "top"
+    },
+    {
+      "id": "backlog-to-portkey",
+      "from": "backlog_agent",
+      "to": "portkey_gateway",
+      "variant": "emphasis"
+    },
+    {
+      "id": "qa-to-portkey",
+      "from": "qa_agent",
+      "to": "portkey_gateway",
+      "variant": "emphasis"
+    },
+    {
+      "id": "spec-to-portkey",
+      "from": "spec_agent",
+      "to": "portkey_gateway",
+      "variant": "emphasis"
+    },
+    {
+      "id": "validation-to-portkey",
+      "from": "validation_agent",
+      "to": "portkey_gateway",
+      "variant": "emphasis"
+    },
+    {
+      "id": "backlog-to-langfuse",
+      "from": "backlog_agent",
+      "to": "langfuse",
+      "variant": "dashed",
+      "fromSide": "bottom"
+    },
+    {
+      "id": "qa-to-langfuse",
+      "from": "qa_agent",
+      "to": "langfuse",
+      "variant": "dashed"
+    },
+    {
+      "id": "spec-to-langfuse",
+      "from": "spec_agent",
+      "to": "langfuse",
+      "variant": "dashed"
+    },
+    {
+      "id": "validation-to-langfuse",
+      "from": "validation_agent",
+      "to": "langfuse",
+      "variant": "dashed"
+    },
+    {
+      "id": "ide-to-portkey",
+      "from": "coding_assistant",
+      "to": "portkey_gateway",
+      "label": "5. assistant LLM calls (:8787)",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "portkey-to-hooks",
+      "from": "portkey_gateway",
+      "to": "portkey_hooks",
+      "label": "6. DLP & RBAC",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "hooks-to-redis",
+      "from": "portkey_hooks",
+      "to": "redis_quota",
+      "label": "7. token quotas",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "portkey-to-llms",
+      "from": "portkey_gateway",
+      "to": "llm_providers",
+      "label": "8. multi-cloud failover",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How to Follow the Numbered Flow (Steps 1 -> 8)",
+      "items": [
+        "Steps 1-3 (Condition & Authorize): Repo AGENTS.md conditions the AI Coding Assistant (1), which calls the deterministic MCP Server :8000 (2) to verify project_id permissions and sync state in the Central DB (3)",
+        "Step 4 (Modular SDLC/STLC Agents): MCP Server dispatches any individual LangGraph agent or custom sequence (Backlog/AC, QA Test Matrix, Spec Scaffolding, Validation Guard)",
+        "Steps 5-8 (100% LLM Governance): Both the Coding Assistant and all 4 Agents route LLM calls through Portkey :8787 (5), enforcing DLP/RBAC hooks (6), Redis quotas (7), and multi-cloud failover (8)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Service Observability: MCP + All 4 Agents -> Loki + Grafana",
+      "items": [
+        "AgenticGuard MCP Server AND all 4 LangGraph Agents ship structured service logs via their embedded Fluentbit library to Loki (:3100) and Grafana (:3001)",
+        "Tracks MCP access-control rejections, DLP hook triggers, and container health without blocking the request hot path"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "AI Observability: All 4 Agents -> Langfuse (:3000)",
+      "items": [
+        "All 4 LangGraph Agents connect directly to Langfuse (:3000) via CallbackHandler to record multi-step agent traces, prompt versions, and validation rubric scores",
+        "Correlates token spend with first-pass PR validation rates across Cursor, Claude Code, and Codex"
+      ]
+    }
+  ]
+}

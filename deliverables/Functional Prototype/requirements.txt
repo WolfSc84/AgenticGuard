@@ -1,0 +1,6 @@
+# Optional production packages (Prototype also includes zero-dependency standard-library runtime for instant execution)
+langgraph>=0.2.70
+langfuse>=2.50.0
+portkey-ai>=1.10.0
+langchain-openai>=0.3.0
+
